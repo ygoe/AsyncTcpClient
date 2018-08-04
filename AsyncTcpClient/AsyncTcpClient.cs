@@ -200,9 +200,9 @@ namespace AsyncTcpClientDemo
 						{
 							readLength = await stream.ReadAsync(buffer, 0, buffer.Length);
 						}
-						catch (IOException ex) when ((ex.InnerException as SocketException)?.ErrorCode == 995)
+						catch (IOException ex) when ((ex.InnerException as SocketException)?.ErrorCode == (int)SocketError.OperationAborted)
 						{
-							// Warning: This error code number may change.
+							// Warning: This error code number (995) may change.
 							// See https://docs.microsoft.com/en-us/windows/desktop/winsock/windows-sockets-error-codes-2
 							Message?.Invoke(this, new AsyncTcpEventArgs("Connection closed locally"));
 							readLength = -1;

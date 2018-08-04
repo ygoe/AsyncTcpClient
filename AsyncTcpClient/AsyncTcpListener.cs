@@ -32,6 +32,7 @@ namespace AsyncTcpClientDemo
 		/// </summary>
 		public AsyncTcpListener()
 		{
+			// Just for the documentation
 		}
 
 		#endregion Constructors
@@ -48,9 +49,9 @@ namespace AsyncTcpClientDemo
 		#region Properties
 
 		/// <summary>
-		/// Gets or sets the local IP address to listen on.
+		/// Gets or sets the local IP address to listen on. Default is all network interfaces.
 		/// </summary>
-		public IPAddress IPAddress { get; set; }
+		public IPAddress IPAddress { get; set; } = IPAddress.IPv6Any;
 
 		/// <summary>
 		/// Gets or sets the port on which to listen for incoming connection attempts.

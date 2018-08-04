@@ -16,8 +16,18 @@ A complete example of both implementation styles is provided in the application 
 * Client: React on new connection
 * Client: React on closed connection
 * Client: React on received data
-* Client: Received data queue buffer, fetch as much data as you need when it's available
+* Client: Received data queue buffer, fetch as much data as you need when it’s available
 * Just three small class files to add to your project ([AsyncTcpClient](https://github.com/ygoe/AsyncTcpClient/blob/master/AsyncTcpClient/AsyncTcpClient.cs), [ByteBuffer](https://github.com/ygoe/AsyncTcpClient/blob/master/AsyncTcpClient/ByteBuffer.cs), optional: [AsyncTcpListener](https://github.com/ygoe/AsyncTcpClient/blob/master/AsyncTcpClient/AsyncTcpListener.cs))
+
+## What’s so hard about TcpClient?
+
+“The [TcpClient](https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcpclient) class provides simple methods for connecting, sending, and receiving stream data over a network in synchronous blocking mode.” Reading from the network stream is a blocking operation. Once you decided that you need received data, your code will block until data was actually received. Your application will even deadlock if no data will ever be sent for some reason. While you can use the DataAvailable property to test that, you still need to poll it regularly, introducing additional load and delays.
+
+While you’re doing something else and not wait for received data, you will also not notice when the connection was closed remotely. Detecting this requires calling the Read method.
+
+Add to this exception handling with special error codes for normal situations and things are getting complicated.
+
+AsyncTcpClient and AsyncTcpListener take all that complexity out of the process, with the bonus of automatic client reconnecting and server-side client connection management. You just handle a new connection and/or received data, the rest is taken care of by these classes.
 
 ## Client side
 

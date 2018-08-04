@@ -35,9 +35,7 @@ namespace UnitTestProject1
 			// Assert
 			Assert.AreEqual(3, buffer.Count);
 			byte[] dequeued = buffer.Dequeue(3);
-			Assert.AreEqual(1, dequeued[0]);
-			Assert.AreEqual(2, dequeued[1]);
-			Assert.AreEqual(3, dequeued[2]);
+			CollectionAssert.AreEqual(new byte[] { 1, 2, 3 }, dequeued);
 		}
 
 		[TestMethod]
@@ -52,9 +50,7 @@ namespace UnitTestProject1
 			// Assert
 			Assert.AreEqual(3, buffer.Count);
 			byte[] dequeued = buffer.Dequeue(3);
-			Assert.AreEqual(3, dequeued[0]);
-			Assert.AreEqual(4, dequeued[1]);
-			Assert.AreEqual(5, dequeued[2]);
+			CollectionAssert.AreEqual(new byte[] { 3, 4, 5 }, dequeued);
 		}
 
 		[TestMethod]
@@ -70,10 +66,7 @@ namespace UnitTestProject1
 			// Assert
 			Assert.AreEqual(4, buffer.Count);
 			byte[] dequeued = buffer.Dequeue(4);
-			Assert.AreEqual(4, dequeued[0]);
-			Assert.AreEqual(5, dequeued[1]);
-			Assert.AreEqual(6, dequeued[2]);
-			Assert.AreEqual(7, dequeued[3]);
+			CollectionAssert.AreEqual(new byte[] { 4, 5, 6, 7 }, dequeued);
 		}
 
 		[TestMethod]
@@ -89,10 +82,7 @@ namespace UnitTestProject1
 			Assert.AreEqual(4, buffer.Count);
 			Assert.AreEqual(4, buffer.Capacity);
 			byte[] dequeued = buffer.Dequeue(4);
-			Assert.AreEqual(1, dequeued[0]);
-			Assert.AreEqual(2, dequeued[1]);
-			Assert.AreEqual(3, dequeued[2]);
-			Assert.AreEqual(4, dequeued[3]);
+			CollectionAssert.AreEqual(new byte[] { 1, 2, 3, 4 }, dequeued);
 		}
 
 		[TestMethod]
@@ -110,10 +100,7 @@ namespace UnitTestProject1
 			Assert.AreEqual(4, buffer.Count);
 			Assert.AreEqual(4, buffer.Capacity);
 			byte[] dequeued = buffer.Dequeue(4);
-			Assert.AreEqual(4, dequeued[0]);
-			Assert.AreEqual(5, dequeued[1]);
-			Assert.AreEqual(6, dequeued[2]);
-			Assert.AreEqual(7, dequeued[3]);
+			CollectionAssert.AreEqual(new byte[] { 4, 5, 6, 7 }, dequeued);
 		}
 
 		[TestMethod]
@@ -158,9 +145,7 @@ namespace UnitTestProject1
 			// Assert
 			Assert.AreEqual(3, buffer.Count);
 			byte[] dequeued = buffer.Dequeue(3);
-			Assert.AreEqual(3, dequeued[0]);
-			Assert.AreEqual(4, dequeued[1]);
-			Assert.AreEqual(5, dequeued[2]);
+			CollectionAssert.AreEqual(new byte[] { 3, 4, 5 }, dequeued);
 		}
 
 		[TestMethod]
@@ -177,10 +162,59 @@ namespace UnitTestProject1
 			// Assert
 			Assert.AreEqual(4, buffer.Count);
 			byte[] dequeued = buffer.Dequeue(4);
-			Assert.AreEqual(3, dequeued[0]);
-			Assert.AreEqual(4, dequeued[1]);
-			Assert.AreEqual(5, dequeued[2]);
-			Assert.AreEqual(6, dequeued[3]);
+			CollectionAssert.AreEqual(new byte[] { 3, 4, 5, 6 }, dequeued);
+		}
+
+		[TestMethod]
+		public void GetBuffer()
+		{
+			// Arrange
+			var buffer = new ByteBuffer(4);
+			buffer.Enqueue(new byte[] { 1, 2, 3, 4 });
+			buffer.Dequeue(2);
+			buffer.Enqueue(new byte[] { 5, 6 });
+
+			// Act
+			byte[] array = buffer.Buffer;
+
+			// Assert
+			Assert.AreEqual(4, array.Length);
+			CollectionAssert.AreEqual(new byte[] { 3, 4, 5, 6 }, array);
+		}
+
+		[TestMethod]
+		public void EnqueueManyExtend()
+		{
+			// Arrange
+			var buffer = new ByteBuffer(4);
+			buffer.Enqueue(new byte[] { 1, 2, 3 });
+
+			// Act
+			buffer.Enqueue(new byte[] { 4, 5, 6 });
+
+			// Assert
+			Assert.AreEqual(8, buffer.Capacity);
+			Assert.AreEqual(6, buffer.Count);
+			byte[] dequeued = buffer.Dequeue(6);
+			CollectionAssert.AreEqual(new byte[] { 1, 2, 3, 4, 5, 6 }, dequeued);
+		}
+
+		[TestMethod]
+		public void EnqueueManySetCapacity()
+		{
+			// Arrange
+			var buffer = new ByteBuffer(4);
+			buffer.Enqueue(new byte[] { 1, 2, 3 });
+
+			// Act
+			buffer.SetCapacity(6);
+			buffer.Enqueue(new byte[] { 4, 5, 6 });
+
+			// Assert
+			Assert.AreEqual(6, buffer.Capacity);
+			Assert.AreEqual(6, buffer.Count);
+			byte[] dequeued = buffer.Dequeue(6);
+			CollectionAssert.AreEqual(new byte[] { 1, 2, 3, 4, 5, 6 }, dequeued);
 		}
 
 		[TestMethod]

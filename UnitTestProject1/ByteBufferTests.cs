@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncTcpClientDemo;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -118,6 +119,28 @@ namespace UnitTestProject1
 		}
 
 		[TestMethod]
+		public void Peek()
+		{
+			// Arrange
+			var buffer = new ByteBuffer();
+			buffer.Enqueue(new byte[] { 1, 2, 3, 4 });
+
+			// Act
+			byte[] peeked = buffer.Peek(2);
+
+			// Assert
+			CollectionAssert.AreEqual(new byte[] { 1, 2, 3, 4 }, buffer.Buffer);
+			CollectionAssert.AreEqual(new byte[] { 1, 2 }, peeked);
+
+			// Act 2
+			byte[] dequeued = buffer.Dequeue(3);
+
+			// Assert 2
+			CollectionAssert.AreEqual(new byte[] { 4 }, buffer.Buffer);
+			CollectionAssert.AreEqual(new byte[] { 1, 2, 3 }, dequeued);
+		}
+
+		[TestMethod]
 		public void Clear()
 		{
 			// Arrange
@@ -178,7 +201,6 @@ namespace UnitTestProject1
 			byte[] array = buffer.Buffer;
 
 			// Assert
-			Assert.AreEqual(4, array.Length);
 			CollectionAssert.AreEqual(new byte[] { 3, 4, 5, 6 }, array);
 		}
 
@@ -240,14 +262,38 @@ namespace UnitTestProject1
 			sw.Stop();
 
 			// Assert
-			Assert.AreEqual(3, dequeued.Length);
-			Assert.AreEqual(1, dequeued[0]);
-			Assert.AreEqual(2, dequeued[1]);
-			Assert.AreEqual(3, dequeued[2]);
-			Assert.AreEqual(1, dequeued2.Length);
-			Assert.AreEqual(4, dequeued2[0]);
+			CollectionAssert.AreEqual(new byte[] { 1, 2, 3 }, dequeued);
+			CollectionAssert.AreEqual(new byte[] { 4 }, dequeued2);
 			Assert.IsTrue(sw.ElapsedMilliseconds > 550);
 			Assert.IsTrue(sw.ElapsedMilliseconds < 700);
+		}
+
+		[TestMethod]
+		public async Task DequeueAsyncCancel()
+		{
+			// Arrange
+			var buffer = new ByteBuffer();
+
+			// Act & Assert
+			var unawaited = Task.Run(async () =>
+			{
+				await Task.Delay(200);
+				buffer.Enqueue(new byte[] { 1 });
+				await Task.Delay(200);
+				buffer.Enqueue(new byte[] { 2 });
+			});
+			byte[] dequeued = null;
+			var sw = new Stopwatch();
+			sw.Start();
+			await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () =>
+			{
+				var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+				dequeued = await buffer.DequeueAsync(3, cts.Token);
+			});
+			sw.Stop();
+			Assert.IsNull(dequeued);
+			Assert.IsTrue(sw.ElapsedMilliseconds > 950);
+			Assert.IsTrue(sw.ElapsedMilliseconds < 1250);
 		}
 	}
 }

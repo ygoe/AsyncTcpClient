@@ -153,10 +153,12 @@ namespace AsyncTcpClientDemo
 				ByteBuffer = new ByteBuffer();
 				if (ServerTcpClient != null)
 				{
+					// Take accepted connection from listener
 					tcpClient = ServerTcpClient;
 				}
 				else
 				{
+					// Try to connect to remote host
 					tcpClient = new TcpClient(AddressFamily.InterNetworkV6);
 					tcpClient.Client.DualMode = true;
 					Message?.Invoke(this, new AsyncTcpEventArgs("Connecting to server"));
@@ -180,7 +182,7 @@ namespace AsyncTcpClientDemo
 					}
 					catch (Exception ex)
 					{
-						Message?.Invoke(this, new AsyncTcpEventArgs("Connection error", ex));
+						Message?.Invoke(this, new AsyncTcpEventArgs("Error connecting to remote host", ex));
 						continue;
 					}
 				}
@@ -204,8 +206,18 @@ namespace AsyncTcpClientDemo
 						{
 							// Warning: This error code number (995) may change.
 							// See https://docs.microsoft.com/en-us/windows/desktop/winsock/windows-sockets-error-codes-2
-							Message?.Invoke(this, new AsyncTcpEventArgs("Connection closed locally"));
+							Message?.Invoke(this, new AsyncTcpEventArgs("Connection closed locally", ex));
 							readLength = -1;
+						}
+						catch (IOException ex) when ((ex.InnerException as SocketException)?.ErrorCode == (int)SocketError.ConnectionAborted)
+						{
+							Message?.Invoke(this, new AsyncTcpEventArgs("Connection aborted", ex));
+							readLength = -1;
+						}
+						catch (IOException ex) when ((ex.InnerException as SocketException)?.ErrorCode == (int)SocketError.ConnectionReset)
+						{
+							Message?.Invoke(this, new AsyncTcpEventArgs("Connection reset remotely", ex));
+							readLength = -2;
 						}
 						if (readLength <= 0)
 						{
@@ -214,7 +226,7 @@ namespace AsyncTcpClientDemo
 								Message?.Invoke(this, new AsyncTcpEventArgs("Connection closed remotely"));
 							}
 							closedTcs.TrySetResult(true);
-							OnClosed(readLength == 0);
+							OnClosed(readLength != -1);
 							return;
 						}
 						var segment = new ArraySegment<byte>(buffer, 0, readLength);

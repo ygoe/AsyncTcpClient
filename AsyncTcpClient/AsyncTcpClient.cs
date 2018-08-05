@@ -62,10 +62,17 @@ namespace AsyncTcpClientDemo
 		public TcpClient ServerTcpClient { get; set; }
 
 		/// <summary>
-		/// Gets or sets the amount of time a <see cref="AsyncTcpClient"/> will wait to connect once
-		/// a connection operation is initiated.
+		/// Gets or sets the amount of time an <see cref="AsyncTcpClient"/> will wait to connect
+		/// once a connection operation is initiated.
 		/// </summary>
 		public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
+
+		/// <summary>
+		/// Gets or sets the maximum amount of time an <see cref="AsyncTcpClient"/> will wait to
+		/// connect once a repeated connection operation is initiated. The actual connection
+		/// timeout is increased with every try and reset when a connection is established.
+		/// </summary>
+		public TimeSpan MaxConnectTimeout { get; set; } = TimeSpan.FromMinutes(1);
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the client should try to reconnect after the
@@ -114,7 +121,7 @@ namespace AsyncTcpClientDemo
 		/// This callback method may not be called when the <see cref="OnConnectedAsync"/> method
 		/// is overridden by a derived class.
 		/// </remarks>
-		public Func<AsyncTcpClient, Task> ConnectedCallback { get; set; }
+		public Func<AsyncTcpClient, bool, Task> ConnectedCallback { get; set; }
 
 		/// <summary>
 		/// Called when the connection was closed. The parameter specifies whether the connection
@@ -148,8 +155,11 @@ namespace AsyncTcpClientDemo
 		/// <returns>The task object representing the asynchronous operation.</returns>
 		public async Task RunAsync()
 		{
+			bool isReconnected = false;
+			int reconnectTry = -1;
 			do
 			{
+				reconnectTry++;
 				ByteBuffer = new ByteBuffer();
 				if (ServerTcpClient != null)
 				{
@@ -159,6 +169,7 @@ namespace AsyncTcpClientDemo
 				else
 				{
 					// Try to connect to remote host
+					var connectTimeout = TimeSpan.FromTicks(ConnectTimeout.Ticks + (MaxConnectTimeout.Ticks - ConnectTimeout.Ticks) / 20 * Math.Min(reconnectTry, 20));
 					tcpClient = new TcpClient(AddressFamily.InterNetworkV6);
 					tcpClient.Client.DualMode = true;
 					Message?.Invoke(this, new AsyncTcpEventArgs("Connecting to server"));
@@ -171,7 +182,8 @@ namespace AsyncTcpClientDemo
 					{
 						connectTask = tcpClient.ConnectAsync(IPAddress, Port);
 					}
-					if (await Task.WhenAny(connectTask, Task.Delay(ConnectTimeout)) != connectTask)
+					var timeoutTask = Task.Delay(connectTimeout);
+					if (await Task.WhenAny(connectTask, timeoutTask) == timeoutTask)
 					{
 						Message?.Invoke(this, new AsyncTcpEventArgs("Connection timeout"));
 						continue;
@@ -183,9 +195,11 @@ namespace AsyncTcpClientDemo
 					catch (Exception ex)
 					{
 						Message?.Invoke(this, new AsyncTcpEventArgs("Error connecting to remote host", ex));
+						await timeoutTask;
 						continue;
 					}
 				}
+				reconnectTry = -1;
 				stream = tcpClient.GetStream();
 
 				// Read until the connection is closed.
@@ -236,11 +250,13 @@ namespace AsyncTcpClientDemo
 				});
 
 				closedTcs = new TaskCompletionSource<bool>();
-				await OnConnectedAsync();
+				await OnConnectedAsync(isReconnected);
 
 				// Wait for closed connection
 				await networkReadTask;
 				tcpClient.Close();
+
+				isReconnected = true;
 			}
 			while (AutoReconnect && ServerTcpClient == null);
 		}
@@ -286,12 +302,14 @@ namespace AsyncTcpClientDemo
 		/// communication logic to execute when the connection was established. The connection will
 		/// not be closed before this method completes.
 		/// </summary>
+		/// <param name="isReconnected">true, if the connection was closed and automatically reopened;
+		///   false, if this is the first established connection for this client instance.</param>
 		/// <returns>The task object representing the asynchronous operation.</returns>
-		protected virtual Task OnConnectedAsync()
+		protected virtual Task OnConnectedAsync(bool isReconnected)
 		{
 			if (ConnectedCallback != null)
 			{
-				return ConnectedCallback(this);
+				return ConnectedCallback(this, isReconnected);
 			}
 			return Task.CompletedTask;
 		}

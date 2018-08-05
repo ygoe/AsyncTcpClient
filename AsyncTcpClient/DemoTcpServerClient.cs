@@ -11,7 +11,7 @@ namespace AsyncTcpClientDemo
 			Message += (s, a) => Console.WriteLine("Server client: " + a.Message);
 		}
 
-		protected override async Task OnConnectedAsync()
+		protected override async Task OnConnectedAsync(bool isReconnected)
 		{
 			await Task.Delay(500);
 			byte[] bytes = Encoding.UTF8.GetBytes("Hello, my name is Server. Talk to me.");

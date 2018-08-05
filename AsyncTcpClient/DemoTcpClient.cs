@@ -7,7 +7,7 @@ namespace AsyncTcpClientDemo
 {
 	public class DemoTcpClient : AsyncTcpClient
 	{
-		protected override async Task OnConnectedAsync()
+		protected override async Task OnConnectedAsync(bool isReconnected)
 		{
 			await WaitAsync();   // Wait for server banner
 			await Task.Delay(50);   // Let the banner land in the console window

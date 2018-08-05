@@ -65,7 +65,7 @@ namespace AsyncTcpClientDemo
 					new AsyncTcpClient
 					{
 						ServerTcpClient = tcpClient,
-						ConnectedCallback = async serverClient =>
+						ConnectedCallback = async (serverClient, isReconnected) =>
 						{
 							await Task.Delay(500);
 							byte[] bytes = Encoding.UTF8.GetBytes("Hello, my name is Server. Talk to me.");
@@ -90,7 +90,7 @@ namespace AsyncTcpClientDemo
 				IPAddress = IPAddress.IPv6Loopback,
 				Port = port,
 				//AutoReconnect = true,
-				ConnectedCallback = async c =>
+				ConnectedCallback = async (c, isReconnected) =>
 				{
 					await c.WaitAsync();   // Wait for server banner
 					await Task.Delay(50);   // Let the banner land in the console window

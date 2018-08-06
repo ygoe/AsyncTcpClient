@@ -10,7 +10,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace AsyncTcpClientDemo
+namespace Unclassified.Net
 {
 	/// <summary>
 	/// Listens asynchronously for connections from TCP network clients.

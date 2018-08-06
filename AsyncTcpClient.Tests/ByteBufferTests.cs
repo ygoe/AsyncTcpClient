@@ -2,10 +2,10 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncTcpClientDemo;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Unclassified.Util;
 
-namespace UnitTestProject1
+namespace AsyncTcpClient.Tests
 {
 	[TestClass]
 	public class ByteBufferTests

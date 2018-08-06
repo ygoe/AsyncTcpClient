@@ -1,8 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Unclassified.AsyncTcpClient</PackageId>
+    <Authors>Yves Goergen</Authors>
+    <Company>unclassified software development</Company>
+    <Description>An asynchronous variant of TcpClient and TcpListener for .NET Standard.</Description>
+    <Copyright>Yves Goergen</Copyright>
+    <PackageProjectUrl>https://github.com/ygoe/AsyncTcpClient</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ygoe/AsyncTcpClient</RepositoryUrl>
+    <PackageTags>network tcp tcp-server tcp-client async async-await</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Unclassified.NetRevisionTask" Version="0.2.2-beta" PrivateAssets="all" />
+  </ItemGroup>
 
 </Project>

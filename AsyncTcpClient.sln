@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2042
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncTcpClient", "AsyncTcpClient\AsyncTcpClient.csproj", "{BDAA13CD-87FD-48A6-BF39-D0E65ABFCBE0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncTcpClient", "AsyncTcpClient\AsyncTcpClient.csproj", "{BDAA13CD-87FD-48A6-BF39-D0E65ABFCBE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProject1", "UnitTestProject1\UnitTestProject1.csproj", "{AE13B6EC-36FD-4D6A-8EC4-37ED8F204602}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncTcpClient.Tests", "AsyncTcpClient.Tests\AsyncTcpClient.Tests.csproj", "{AE13B6EC-36FD-4D6A-8EC4-37ED8F204602}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncTcpClientDemo", "AsyncTcpClientDemo\AsyncTcpClientDemo.csproj", "{9016552A-2AA1-4590-80EC-1B291E6A014C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{AE13B6EC-36FD-4D6A-8EC4-37ED8F204602}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE13B6EC-36FD-4D6A-8EC4-37ED8F204602}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE13B6EC-36FD-4D6A-8EC4-37ED8F204602}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9016552A-2AA1-4590-80EC-1B291E6A014C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9016552A-2AA1-4590-80EC-1B291E6A014C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9016552A-2AA1-4590-80EC-1B291E6A014C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9016552A-2AA1-4590-80EC-1B291E6A014C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

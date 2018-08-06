@@ -7,7 +7,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AsyncTcpClientDemo
+namespace Unclassified.Util
 {
 	/// <summary>
 	/// Represents a first-in, first-out collection of bytes with asynchronous dequeuing.

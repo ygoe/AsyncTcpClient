@@ -2,11 +2,13 @@
 
 *An asynchronous variant of TcpClient and TcpListener for .NET Standard.*
 
+[![NuGet](https://img.shields.io/nuget/v/Unclassified.AsyncTcpClient.svg)](https://www.nuget.org/packages/Unclassified.AsyncTcpClient)
+
 Building asynchronous solutions with TcpClient and TcpListener is complicated and it is easy to introduce bugs or miss critical features. These classes provide an easy solution for this task. Writing asynchronous TCP/IP clients and servers with these classes only requires the implementation of very basic callbacks. Alternatively, you can implement your connection logic in derived classes. In any case, you just have to read the received data from a buffer and send data back. All socket and stream interaction is hidden from you.
 
 This also includes an **asynchronous byte buffer** that keeps all received bytes as they come in. Applications can dequeue as many bytes as they need without discarding what else was received. Dequeueing returns up to as many bytes as are available when called synchronously, or exactly the requested number of bytes when called asynchronously. The async method can be cancelled. This ensures that the code will never block irrecoverably.
 
-A complete example of both implementation styles is provided in the application in this repository. Start reading at [Program.cs](https://github.com/ygoe/AsyncTcpClient/blob/master/AsyncTcpClient/Program.cs).
+A complete example of both implementation styles is provided in the application in this repository. Start reading at [Program.cs](https://github.com/ygoe/AsyncTcpClient/blob/master/AsyncTcpClientDemo/Program.cs).
 
 ## Features
 

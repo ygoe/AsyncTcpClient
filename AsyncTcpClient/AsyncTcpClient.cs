@@ -9,8 +9,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Unclassified.Util;
 
-namespace AsyncTcpClientDemo
+namespace Unclassified.Net
 {
 	/// <summary>
 	/// Provides asynchronous client connections for TCP network services.

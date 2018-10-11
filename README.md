@@ -130,7 +130,7 @@ Non-generic AsyncTcpListener with callbacks:
             new AsyncTcpClient
             {
                 ServerTcpClient = tcpClient,
-                ConnectedCallback = async serverClient =>
+                ConnectedCallback = async (serverClient, isReconnected) =>
                 {
                     // Custom server logic
                 },

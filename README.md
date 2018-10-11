@@ -52,7 +52,7 @@ AsyncTcpClient with callbacks:
         IPAddress = IPAddress.IPv6Loopback,
         Port = 12345,
         //AutoReconnect = true,
-        ConnectedCallback = async client =>
+        ConnectedCallback = async (client, isReconnected) =>
         {
             // Custom connection logic
         },
@@ -71,11 +71,11 @@ Close the client connection:
 
 Virtual method to override in derived classes:
 
-    protected virtual Task OnConnectedAsync()
+    protected virtual Task OnConnectedAsync(bool isReconnected)
 
 Callback method:
 
-    public Func<AsyncTcpClient, Task> ConnectedCallback { get; set; }
+    public Func<AsyncTcpClient, bool, Task> ConnectedCallback { get; set; }
 
 Called when the client has connected to the remote host. This method can implement the communication logic to execute when the connection was established. The connection will not be closed before this method completes.
 

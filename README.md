@@ -65,6 +65,10 @@ AsyncTcpClient with callbacks:
 
 Close the client connection:
 
+    // This can be called from within a callback
+	client.Disconnect();
+	
+	// This should only be called outside of RunAsync
     client.Dispose();
 
 ### OnConnected

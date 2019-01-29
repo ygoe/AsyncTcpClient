@@ -263,6 +263,15 @@ namespace Unclassified.Net
 		}
 
 		/// <summary>
+		/// Closes the socket connection normally. This does not release the resources used by the
+		/// <see cref="AsyncTcpClient"/>.
+		/// </summary>
+		public void Disconnect()
+		{
+			tcpClient.Client.Disconnect(false);
+		}
+
+		/// <summary>
 		/// Releases the managed and unmanaged resources used by the <see cref="AsyncTcpClient"/>.
 		/// Closes the connection to the remote host and disabled automatic reconnecting.
 		/// </summary>
@@ -291,7 +300,10 @@ namespace Unclassified.Net
 		/// <returns>The task object representing the asynchronous operation.</returns>
 		public async Task Send(ArraySegment<byte> data)
 		{
-			await stream.WriteAsync(data.Array, data.Offset, data.Count);
+			if (tcpClient.Client.Connected)
+			{
+				await stream.WriteAsync(data.Array, data.Offset, data.Count);
+			}
 		}
 
 		#endregion Public methods

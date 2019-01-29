@@ -11,7 +11,7 @@ namespace AsyncTcpClientDemo
 	{
 		public static void Main(string[] args)
 		{
-			new Program().RunAsync().GetAwaiter().GetResult();
+			new Program().RunAsync2().GetAwaiter().GetResult();
 			Console.WriteLine("Press any key to exit...");
 			Console.ReadKey(true);
 		}
@@ -41,7 +41,7 @@ namespace AsyncTcpClientDemo
 			client.Message += (s, a) => Console.WriteLine("Client: " + a.Message);
 			var clientTask = client.RunAsync();
 
-			await Task.Delay(10000);
+			await Task.Delay(10 * 1000);
 			Console.WriteLine("Program: stopping server");
 			server.Stop(true);
 			await serverTask;
@@ -69,7 +69,7 @@ namespace AsyncTcpClientDemo
 						ConnectedCallback = async (serverClient, isReconnected) =>
 						{
 							await Task.Delay(500);
-							byte[] bytes = Encoding.UTF8.GetBytes("Hello, my name is Server. Talk to me.");
+							byte[] bytes = Encoding.UTF8.GetBytes($"Hello, {tcpClient.Client.RemoteEndPoint}, my name is Server. Talk to me.");
 							await serverClient.Send(new ArraySegment<byte>(bytes, 0, bytes.Length));
 						},
 						ReceivedCallback = async (serverClient, count) =>
@@ -80,6 +80,12 @@ namespace AsyncTcpClientDemo
 
 							bytes = Encoding.UTF8.GetBytes("You said: " + message);
 							await serverClient.Send(new ArraySegment<byte>(bytes, 0, bytes.Length));
+
+							if (message == "bye")
+							{
+								// Let the server close the connection
+								serverClient.Disconnect();
+							}
 						}
 					}.RunAsync()
 			};
@@ -115,7 +121,8 @@ namespace AsyncTcpClientDemo
 						string enteredMessage = await consoleReadTask;
 						if (enteredMessage == "")
 						{
-							c.Dispose();
+							// Close the client connection
+							c.Disconnect();
 							break;
 						}
 						byte[] bytes = Encoding.UTF8.GetBytes(enteredMessage);
@@ -128,6 +135,8 @@ namespace AsyncTcpClientDemo
 							break;
 						}
 					}
+					// NOTE: The client connection will NOT be closed automatically when this method
+					//       returns. It has to be closed explicitly when desired.
 				},
 				ReceivedCallback = (c, count) =>
 				{
@@ -140,7 +149,7 @@ namespace AsyncTcpClientDemo
 			client.Message += (s, a) => Console.WriteLine("Client: " + a.Message);
 			var clientTask = client.RunAsync();
 
-			await Task.Delay(10000);
+			await Task.Delay(10 * 1000);
 			Console.WriteLine("Program: stopping server");
 			server.Stop(true);
 			await serverTask;

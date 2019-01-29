@@ -107,12 +107,14 @@ namespace Unclassified.Net
 						// Listener was stopped
 						break;
 					}
-					Message?.Invoke(this, new AsyncTcpEventArgs("Client connected"));
+					var endpoint = tcpClient.Client.RemoteEndPoint;
+					Message?.Invoke(this, new AsyncTcpEventArgs("Client connected from " + endpoint));
 					clients.TryAdd(tcpClient, true);
 					var clientTask = Task.Run(async () =>
 					{
 						await OnClientConnected(tcpClient);
 						tcpClient.Dispose();
+						Message?.Invoke(this, new AsyncTcpEventArgs("Client disconnected from " + endpoint));
 						clients.TryRemove(tcpClient, out _);
 					});
 					clientTasks.Add(clientTask);

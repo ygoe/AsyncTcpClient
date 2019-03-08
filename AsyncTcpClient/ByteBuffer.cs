@@ -244,7 +244,7 @@ namespace Unclassified.Util
 			{
 				if (Count + count > Capacity)
 				{
-					SetCapacity(Capacity * 2);
+					SetCapacity(Math.Max(Capacity * 2, Count + count));
 				}
 
 				int tailCount;

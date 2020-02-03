@@ -94,9 +94,9 @@ namespace AsyncTcpClientDemo
 
 			var client = new AsyncTcpClient
 			{
-				IPAddress = IPAddress.IPv6Loopback,
+				IPAddress = IPAddress.Loopback,
 				Port = port,
-				//AutoReconnect = true,
+				AutoReconnect = true,
 				ConnectedCallback = async (c, isReconnected) =>
 				{
 					await c.WaitAsync();   // Wait for server banner
@@ -143,19 +143,29 @@ namespace AsyncTcpClientDemo
 					byte[] bytes = c.ByteBuffer.Dequeue(count);
 					string message = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
 					Console.WriteLine("Client: received: " + message);
+
+					if (message == "close")
+						c.Disconnect();
+
 					return Task.CompletedTask;
 				}
 			};
 			client.Message += (s, a) => Console.WriteLine("Client: " + a.Message);
 			var clientTask = client.RunAsync();
 
-			await Task.Delay(10 * 1000);
-			Console.WriteLine("Program: stopping server");
-			server.Stop(true);
-			await serverTask;
 
-			client.Dispose();
+			// Setup 1
+			//await Task.Delay(10 * 1000);
+			//Console.WriteLine("Program: stopping server");
+			//server.Stop(true);
+			//await serverTask;
+			//client.Disconnect();
+			//await clientTask;
+
+
+			// Setup 2
 			await clientTask;
+			client.Dispose();
 		}
 	}
 }

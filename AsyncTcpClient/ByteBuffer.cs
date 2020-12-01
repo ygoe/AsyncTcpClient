@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2018, Yves Goergen, https://unclassified.software
+﻿// Copyright (c) 2018-2020, Yves Goergen, https://unclassified.software
 //
 // Copying and distribution of this file, with or without modification, are permitted provided the
 // copyright notice and this notice are preserved. This file is offered as-is, without any warranty.
@@ -16,12 +16,14 @@ namespace Unclassified.Util
 	{
 		#region Private data
 
+		private const int defaultCapacity = 1024;
+
 		private readonly object syncObj = new object();
 
 		/// <summary>
 		/// The internal buffer.
 		/// </summary>
-		private byte[] buffer = new byte[1024];
+		private byte[] buffer = new byte[defaultCapacity];
 
 		/// <summary>
 		/// The buffer index of the first byte to dequeue.
@@ -83,6 +85,7 @@ namespace Unclassified.Util
 		/// <param name="capacity">The initial number of bytes that the <see cref="ByteBuffer"/> can contain.</param>
 		public ByteBuffer(int capacity)
 		{
+			AutoTrimMinCapacity = capacity;
 			SetCapacity(capacity);
 		}
 
@@ -144,6 +147,25 @@ namespace Unclassified.Util
 		/// </summary>
 		public int Capacity => buffer.Length;
 
+		/// <summary>
+		/// Gets or sets a value indicating whether the buffer is automatically trimmed on dequeue
+		/// if the <see cref="Count"/> becomes significantly smaller than the <see cref="Capacity"/>.
+		/// Default is true.
+		/// </summary>
+		/// <remarks>
+		/// This property is not thread-safe and should only be set if no other operation is ongoing.
+		/// </remarks>
+		public bool AutoTrim { get; set; } = true;
+
+		/// <summary>
+		/// Gets or sets the minimum capacity to maintain when automatically trimming on dequeue.
+		/// See <see cref="AutoTrim"/>. Default is the initial capacity as set in the constructor.
+		/// </summary>
+		/// <remarks>
+		/// This property is not thread-safe and must only be set if no other operation is ongoing.
+		/// </remarks>
+		public int AutoTrimMinCapacity { get; set; } = defaultCapacity;
+
 		#endregion Properties
 
 		#region Public methods
@@ -170,16 +192,20 @@ namespace Unclassified.Util
 		{
 			if (capacity < 0)
 				throw new ArgumentOutOfRangeException(nameof(capacity), "The capacity must not be negative.");
-			if (capacity < Count)
-				throw new ArgumentOutOfRangeException(nameof(capacity), "The capacity is too small to hold the current buffer content.");
 
 			lock (syncObj)
 			{
+				int count = Count;
+				if (capacity < count)
+					throw new ArgumentOutOfRangeException(nameof(capacity), "The capacity is too small to hold the current buffer content.");
+
 				if (capacity != buffer.Length)
 				{
 					byte[] newBuffer = new byte[capacity];
-					Array.Copy(Buffer, newBuffer, Count);
+					Array.Copy(Buffer, newBuffer, count);
 					buffer = newBuffer;
+					head = 0;
+					tail = count - 1;
 				}
 			}
 		}
@@ -286,6 +312,19 @@ namespace Unclassified.Util
 		}
 
 		/// <summary>
+		/// Removes and returns bytes at the beginning of the buffer.
+		/// </summary>
+		/// <param name="buffer">The buffer to write the data to.</param>
+		/// <param name="offset">The offset in the <paramref name="buffer"/> to write to.</param>
+		/// <param name="maxCount">The maximum number of bytes to dequeue.</param>
+		/// <returns>The number of dequeued bytes. This can be less than requested if no more bytes
+		///   are available.</returns>
+		public int Dequeue(byte[] buffer, int offset, int maxCount)
+		{
+			return DequeueInternal(buffer, offset, maxCount, peek: false);
+		}
+
+		/// <summary>
 		/// Returns bytes at the beginning of the buffer without removing them.
 		/// </summary>
 		/// <param name="maxCount">The maximum number of bytes to peek.</param>
@@ -325,6 +364,38 @@ namespace Unclassified.Util
 		}
 
 		/// <summary>
+		/// Removes and returns bytes at the beginning of the buffer. Waits asynchronously until
+		/// <paramref name="count"/> bytes are available.
+		/// </summary>
+		/// <param name="buffer">The buffer to write the data to.</param>
+		/// <param name="offset">The offset in the <paramref name="buffer"/> to write to.</param>
+		/// <param name="count">The number of bytes to dequeue.</param>
+		/// <param name="cancellationToken">A cancellation token used to propagate notification that
+		///	  this operation should be canceled.</param>
+		/// <returns>The bytes at the beginning of the buffer.</returns>
+		public async Task DequeueAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			if (count < 0)
+				throw new ArgumentOutOfRangeException(nameof(count), "The count must not be negative.");
+			if (buffer.Length < offset + count)
+				throw new ArgumentException("The buffer is too small for the requested data.", nameof(buffer));
+
+			while (true)
+			{
+				TaskCompletionSource<bool> myDequeueManualTcs;
+				lock (syncObj)
+				{
+					if (count <= Count)
+					{
+						Dequeue(buffer, offset, count);
+					}
+					myDequeueManualTcs = Reset(ref dequeueManualTcs);
+				}
+				await AwaitAsync(myDequeueManualTcs, cancellationToken);
+			}
+		}
+
+		/// <summary>
 		/// Waits asynchronously until bytes are available.
 		/// </summary>
 		/// <param name="cancellationToken">A cancellation token used to propagate notification that
@@ -350,33 +421,43 @@ namespace Unclassified.Util
 
 		private byte[] DequeueInternal(int count, bool peek)
 		{
+			if (count > Count)
+				count = Count;
+			byte[] bytes = new byte[count];
+			DequeueInternal(bytes, 0, count, peek);
+			return bytes;
+		}
+
+		private int DequeueInternal(byte[] bytes, int offset, int count, bool peek)
+		{
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count), "The count must not be negative.");
 			if (count == 0)
-				return new byte[0];   // Easy
+				return count;   // Easy
+			if (bytes.Length < offset + count)
+				throw new ArgumentException("The buffer is too small for the requested data.", nameof(bytes));
 
 			lock (syncObj)
 			{
 				if (count > Count)
 					count = Count;
 
-				byte[] bytes = new byte[count];
 				if (tail >= head)
 				{
-					Array.Copy(buffer, head, bytes, 0, count);
+					Array.Copy(buffer, head, bytes, offset, count);
 				}
 				else
 				{
 					if (count <= Capacity - head)
 					{
-						Array.Copy(buffer, head, bytes, 0, count);
+						Array.Copy(buffer, head, bytes, offset, count);
 					}
 					else
 					{
 						int headCount = Capacity - head;
-						Array.Copy(buffer, head, bytes, 0, headCount);
+						Array.Copy(buffer, head, bytes, offset, headCount);
 						int wrapCount = count - headCount;
-						Array.Copy(buffer, 0, bytes, headCount, wrapCount);
+						Array.Copy(buffer, 0, bytes, offset + headCount, wrapCount);
 					}
 				}
 				if (!peek)
@@ -392,8 +473,21 @@ namespace Unclassified.Util
 					{
 						head = (head + count) % Capacity;
 					}
+
+					if (AutoTrim && Capacity > AutoTrimMinCapacity && Count <= Capacity / 2)
+					{
+						int newCapacity = Count;
+						if (newCapacity < AutoTrimMinCapacity)
+						{
+							newCapacity = AutoTrimMinCapacity;
+						}
+						if (newCapacity < Capacity)
+						{
+							SetCapacity(newCapacity);
+						}
+					}
 				}
-				return bytes;
+				return count;
 			}
 		}
 

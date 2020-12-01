@@ -134,6 +134,7 @@ Non-generic AsyncTcpListener with callbacks:
             new AsyncTcpClient
             {
                 ServerTcpClient = tcpClient,
+                RemoteEndPoint = tcpClient.Client.RemoteEndPoint,
                 ConnectedCallback = async (serverClient, isReconnected) =>
                 {
                     // Custom server logic

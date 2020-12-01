@@ -63,6 +63,12 @@ namespace Unclassified.Net
 		public TcpClient ServerTcpClient { get; set; }
 
 		/// <summary>
+		/// Gets or sets the remote endpoint of the socket. Only for client connections that were
+		/// accepted by an <see cref="AsyncTcpListener"/>.
+		/// </summary>
+		public EndPoint RemoteEndPoint { get; set; }
+
+		/// <summary>
 		/// Gets or sets the amount of time an <see cref="AsyncTcpClient"/> will wait to connect
 		/// once a connection operation is initiated.
 		/// </summary>
@@ -96,6 +102,11 @@ namespace Unclassified.Net
 		/// Gets or sets the port number of the remote host.
 		/// </summary>
 		public int Port { get; set; }
+
+		/// <summary>
+		/// Gets a value indicating whether the client is currently connected.
+		/// </summary>
+		public bool IsConnected => tcpClient.Client.Connected;
 
 		/// <summary>
 		/// Gets the buffer of data that was received from the remote host.
@@ -273,7 +284,7 @@ namespace Unclassified.Net
 
 		/// <summary>
 		/// Releases the managed and unmanaged resources used by the <see cref="AsyncTcpClient"/>.
-		/// Closes the connection to the remote host and disabled automatic reconnecting.
+		/// Closes the connection to the remote host and disables automatic reconnecting.
 		/// </summary>
 		public void Dispose()
 		{
@@ -297,13 +308,14 @@ namespace Unclassified.Net
 		/// Sends data to the remote host.
 		/// </summary>
 		/// <param name="data">The data to send.</param>
+		/// <param name="cancellationToken">A cancellation token used to propagate notification that this operation should be canceled.</param>
 		/// <returns>The task object representing the asynchronous operation.</returns>
-		public async Task Send(ArraySegment<byte> data)
+		public async Task Send(ArraySegment<byte> data, CancellationToken cancellationToken = default)
 		{
-			if (tcpClient.Client.Connected)
-			{
-				await stream.WriteAsync(data.Array, data.Offset, data.Count);
-			}
+			if (!tcpClient.Client.Connected)
+				throw new InvalidOperationException("Not connected.");
+
+			await stream.WriteAsync(data.Array, data.Offset, data.Count, cancellationToken);
 		}
 
 		#endregion Public methods

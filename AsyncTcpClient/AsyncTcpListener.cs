@@ -211,7 +211,8 @@ namespace Unclassified.Net
 		{
 			var client = new TClient
 			{
-				ServerTcpClient = tcpClient
+				ServerTcpClient = tcpClient,
+				RemoteEndPoint = tcpClient.Client.RemoteEndPoint
 			};
 			return client.RunAsync();
 		}

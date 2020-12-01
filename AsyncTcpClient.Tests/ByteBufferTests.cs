@@ -312,5 +312,21 @@ namespace AsyncTcpClient.Tests
 			Assert.AreEqual(payloadBytes.Length, buffer.Count);
 			CollectionAssert.AreEqual(payloadBytes, buffer.Dequeue(buffer.Count));
 		}
+
+		[TestMethod]
+		public void EnqueueFragmentedWithResize()
+		{
+			// Arrange: Create buffer fitting the data and read some
+			var buffer = new ByteBuffer(4);
+			buffer.Enqueue(new byte[] { 0, 1, 2, 3 });
+			buffer.Dequeue(2);
+
+			// Act: Add more than fits (needs to resize, has free area at the beginning)
+			buffer.Enqueue(new byte[] { 4, 5, 6, 7 });
+
+			// Assert: Check for correct data
+			Assert.AreEqual(6, buffer.Count);
+			CollectionAssert.AreEqual(new byte[] { 2, 3, 4, 5, 6, 7 }, buffer.Buffer);
+		}
 	}
 }

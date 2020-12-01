@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2018, Yves Goergen, https://unclassified.software
+﻿// Copyright (c) 2018-2020, Yves Goergen, https://unclassified.software
 //
 // Copying and distribution of this file, with or without modification, are permitted provided the
 // copyright notice and this notice are preserved. This file is offered as-is, without any warranty.
@@ -228,10 +228,12 @@ namespace Unclassified.Net
 						{
 							readLength = await stream.ReadAsync(buffer, 0, buffer.Length);
 						}
-						catch (IOException ex) when ((ex.InnerException as SocketException)?.ErrorCode == (int)SocketError.OperationAborted)
+						catch (IOException ex) when ((ex.InnerException as SocketException)?.ErrorCode == (int)SocketError.OperationAborted ||
+							(ex.InnerException as SocketException)?.ErrorCode == 125 /* Operation canceled (Linux) */)
 						{
 							// Warning: This error code number (995) may change.
 							// See https://docs.microsoft.com/en-us/windows/desktop/winsock/windows-sockets-error-codes-2
+							// Note: NativeErrorCode and ErrorCode 125 observed on Linux.
 							Message?.Invoke(this, new AsyncTcpEventArgs("Connection closed locally", ex));
 							readLength = -1;
 						}
@@ -299,7 +301,7 @@ namespace Unclassified.Net
 		/// <param name="cancellationToken">A cancellation token used to propagate notification that this operation should be canceled.</param>
 		/// <returns>true, if data is available; false, if the connection is closing.</returns>
 		/// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-		public async Task<bool> WaitAsync(CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<bool> WaitAsync(CancellationToken cancellationToken = default)
 		{
 			return await Task.WhenAny(ByteBuffer.WaitAsync(cancellationToken), closedTcs.Task) != closedTcs.Task;
 		}

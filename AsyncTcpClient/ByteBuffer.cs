@@ -16,14 +16,14 @@ namespace Unclassified.Util
 	{
 		#region Private data
 
-		private const int defaultCapacity = 1024;
+		private const int DefaultCapacity = 1024;
 
 		private readonly object syncObj = new object();
 
 		/// <summary>
 		/// The internal buffer.
 		/// </summary>
-		private byte[] buffer = new byte[defaultCapacity];
+		private byte[] buffer = new byte[DefaultCapacity];
 
 		/// <summary>
 		/// The buffer index of the first byte to dequeue.
@@ -42,7 +42,7 @@ namespace Unclassified.Util
 		private bool isEmpty = true;
 
 		/// <summary>
-		/// Used to signal the waiting <see cref="DequeueAsync"/> method.
+		/// Used to signal the waiting <see cref="DequeueAsync(int, CancellationToken)"/> method.
 		/// Set when new data becomes available. Only reset there.
 		/// </summary>
 		private TaskCompletionSource<bool> dequeueManualTcs =
@@ -164,7 +164,7 @@ namespace Unclassified.Util
 		/// <remarks>
 		/// This property is not thread-safe and must only be set if no other operation is ongoing.
 		/// </remarks>
-		public int AutoTrimMinCapacity { get; set; } = defaultCapacity;
+		public int AutoTrimMinCapacity { get; set; } = DefaultCapacity;
 
 		#endregion Properties
 
@@ -343,7 +343,7 @@ namespace Unclassified.Util
 		/// <param name="cancellationToken">A cancellation token used to propagate notification that
 		///	  this operation should be canceled.</param>
 		/// <returns>The bytes at the beginning of the buffer.</returns>
-		public async Task<byte[]> DequeueAsync(int count, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task<byte[]> DequeueAsync(int count, CancellationToken cancellationToken = default)
 		{
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count), "The count must not be negative.");
@@ -373,7 +373,7 @@ namespace Unclassified.Util
 		/// <param name="cancellationToken">A cancellation token used to propagate notification that
 		///	  this operation should be canceled.</param>
 		/// <returns>The bytes at the beginning of the buffer.</returns>
-		public async Task DequeueAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default(CancellationToken))
+		public async Task DequeueAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
 		{
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count), "The count must not be negative.");
@@ -401,7 +401,7 @@ namespace Unclassified.Util
 		/// <param name="cancellationToken">A cancellation token used to propagate notification that
 		///   this operation should be canceled.</param>
 		/// <returns>The task object representing the asynchronous operation.</returns>
-		public async Task WaitAsync(CancellationToken cancellationToken = default(CancellationToken))
+		public async Task WaitAsync(CancellationToken cancellationToken = default)
 		{
 			TaskCompletionSource<bool> myAvailableTcs;
 			lock (syncObj)

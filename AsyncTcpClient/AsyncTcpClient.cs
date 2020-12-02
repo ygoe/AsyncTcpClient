@@ -247,11 +247,16 @@ namespace Unclassified.Net
 							Message?.Invoke(this, new AsyncTcpEventArgs("Connection reset remotely", ex));
 							readLength = -2;
 						}
+						catch(Exception ex)
+						{
+							Message?.Invoke(this, new AsyncTcpEventArgs("Read from stream failed", ex));
+							readLength = -3;
+						}
 						if (readLength <= 0)
 						{
 							if (readLength == 0)
 							{
-								Message?.Invoke(this, new AsyncTcpEventArgs("Connection closed remotely"));
+								Message?.Invoke(this, new AsyncTcpEventArgs("Connection closed gracefully"));
 							}
 							closedTcs.TrySetResult(true);
 							OnClosed(readLength != -1);
@@ -276,13 +281,26 @@ namespace Unclassified.Net
 		}
 
 		/// <summary>
-		/// Closes the socket connection normally. This does not release the resources used by the
+		/// Closes the socket connection normally. Switch off AutoReconnect. This does not release the resources used by the
 		/// <see cref="AsyncTcpClient"/>.
 		/// </summary>
 		public void Disconnect()
 		{
+			AutoReconnect = false;
 			tcpClient.Client.Disconnect(false);
 		}
+
+
+		/// <summary>
+		/// Closes the socket connection normally and try to connect again. This does not release the resources used by the
+		/// <see cref="AsyncTcpClient"/>.
+		/// </summary>
+		public void DisconnectAndReconnect()
+		{
+			AutoReconnect = true;
+			tcpClient.Client.Disconnect(false);
+		}
+
 
 		/// <summary>
 		/// Releases the managed and unmanaged resources used by the <see cref="AsyncTcpClient"/>.
